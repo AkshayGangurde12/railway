@@ -256,16 +256,6 @@ export default function Dashboard() {
         variants={fadeIn}
       >
         <div className="max-w-7xl mx-auto">
-          {/* Debug Information (visible during development) */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-sm">
-              <h3 className="font-bold text-yellow-800 mb-2">Debug Information:</h3>
-              <pre className="whitespace-pre-wrap">
-                {JSON.stringify(debugInfo, null, 2)}
-              </pre>
-            </div>
-          )}
-          
           <motion.div 
             className="bg-white rounded-xl shadow-xl overflow-hidden"
             variants={fadeIn}

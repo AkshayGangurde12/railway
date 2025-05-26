@@ -18,11 +18,11 @@ function About() {
             />
             <div className="text-left">
               <p className="text-gray-600 mb-6">
-                Welcome to Prescripto, your trusted partner in managing your healthcare needs conveniently and efficiently. At Prescripto, we understand the challenges individuals face when it comes to scheduling doctor appointments and managing their health records.
+                Welcome to Medicare, your trusted partner in managing your healthcare needs conveniently and efficiently. At Medicare, we understand the challenges individuals face when it comes to scheduling doctor appointments and managing their health records.
               </p>
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Our Vision</h2>
               <p className="text-gray-600">
-                Our vision at Prescripto is to create a seamless healthcare experience for every user. We aim to bridge the gap between patients and healthcare providers, making it easier for you to access the care you need, when you need it.
+                Our vision at Medicare is to create a seamless healthcare experience for every user. We aim to bridge the gap between patients and healthcare providers, making it easier for you to access the care you need, when you need it.
               </p>
             </div>
           </div>

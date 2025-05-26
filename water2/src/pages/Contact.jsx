@@ -48,7 +48,7 @@ function Contact() {
 
             {/* Careers Section */}
             <div className="pt-8 border-t border-gray-200">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">CAREERS AT PRESCRIPTO</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">CAREERS AT MEDICARE</h2>
               <p className="text-gray-600 mb-6">
                 Learn more about our teams and job openings.
               </p>

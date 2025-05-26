@@ -9,11 +9,11 @@ const Footer = () => {
         <div className="flex flex-col items-start">
           <div className="flex items-center gap-2">
             <img
-              src={assets.logo}
-              alt="Logo"
+              src={assets.logoo}
+              alt="Medicare Logo"
               className="h-10 w-auto transition duration-300 hover:scale-110"
             />
-            <p className="text-blue-900 text-xl font-bold">Prescripto</p>
+            <p className="text-blue-900 text-xl font-bold">Medicare</p>
           </div>
           <p className="text-gray-600 mt-4 text-sm leading-relaxed max-w-sm">
             Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
@@ -43,7 +43,7 @@ const Footer = () => {
 
       <div className="mt-10 border-t border-gray-300 pt-6 text-center">
         <p className="text-gray-600 text-sm">
-          Copyright © 2024 @ Prescripto.com - All Rights Reserved.
+          Copyright © 2024 @ Medicare.com - All Rights Reserved.
         </p>
       </div>
     </footer>

@@ -29,6 +29,7 @@ import PatientDashboard from "./pages/Dashboard";
 import Dashboard from "./pages/Admin";
 import Appointment from "./pages/Appointment";
 import AddDoctor from "./pages/AddDoctor";
+import LandingPage from './pages/LandingPage';
 import 'react-toastify/dist/ReactToastify.css';
 
 const App = () => {
@@ -68,7 +69,8 @@ const App = () => {
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/my-profile" element={<PatientDashboard />} />
-              <Route path="/dashboard" element={<Dashboard1 />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/" element={<LandingPage />} />
               <Route path="/appointment/:docId" element={<Appointment />} />
               <Route path="/admin/dashboard" element={<Dashboard />} />
             </Routes>

@@ -59,7 +59,7 @@ export const googleAuth = async (req, res) => {
         // Generate JWT token for doctor
         token = jwt.sign(
           { 
-            userId: user._id,
+            id: user._id,
             email: user.email,
             role: 'doctor',
             authProvider: 'google'
@@ -126,7 +126,7 @@ export const googleAuth = async (req, res) => {
         // Generate JWT token for user
         token = jwt.sign(
           { 
-            userId: user._id,
+            id: user._id,
             email: user.email,
             role: 'user',
             authProvider: 'google'

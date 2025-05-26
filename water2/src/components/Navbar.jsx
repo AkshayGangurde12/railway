@@ -22,7 +22,7 @@ const Navbar = ({ toggleDarkMode, darkMode }) => {
             <img
               src={assets.logoo}
               alt="Logo"
-              className="h-10 w-auto mr-2 transition duration-300 hover:scale-110"
+              className="h-16 w-auto mr-3 transition duration-300 hover:scale-110"
             />
           </NavLink>
         </div>

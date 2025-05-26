@@ -35,7 +35,7 @@ export const uploadPdf = async (req, res) => {
 
 const signup = async (req, res) => {
   try {
-    const { name, email, password, otp } = req.body;
+    const { name, email, password } = req.body;
     const imageFile = req.file;
 
     if (!name || !email || !password || !imageFile) {
@@ -45,15 +45,13 @@ const signup = async (req, res) => {
       });
     }
 
-    // Verify OTP first
-    const otpRecord = await OTPSchema.findOne({ email }).sort({ createdAt: -1 });
-    if (!otpRecord || otpRecord.otp !== otp) {
-      return res.status(400).json({ success: false, message: 'Invalid OTP' });
-    }
-    
-    // Check if OTP is expired (e.g., 10 minutes)
-    if (new Date() - otpRecord.createdAt > 10 * 60 * 1000) {
-      return res.status(400).json({ success: false, message: 'OTP expired' });
+    // Check if user already exists
+    const existingUser = await userModel.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "User already exists"
+      });
     }
 
     // Convert image to base64
@@ -72,7 +70,6 @@ const signup = async (req, res) => {
 
     const newUser = new userModel(userData);
     await newUser.save();
-
 
     const token = jwt.sign(
       {

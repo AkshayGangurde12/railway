@@ -19,7 +19,7 @@ const [otpSent, setOtpSent] = useState(false);
 const [otp, setOtp] = useState('');
 const [verificationLoading, setVerificationLoading] = useState(false);
 const [resendTimer, setResendTimer] = useState(0);
-  
+const [otpVerified, setOtpVerified] = useState(false);
 
   const handleToggle = () => {
     setIsDoctor(prev => !prev);
@@ -79,50 +79,83 @@ const [resendTimer, setResendTimer] = useState(0);
     } finally {
       setLoading(false);
     }
-  };  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+  }; 
 
-    const submitData = new FormData();
-    submitData.append('name', formData.name);
-    submitData.append('email', formData.email);
-    submitData.append('password', formData.password);
-    submitData.append('otp', otp);
-
-    // Add speciality for doctors
-    if (isDoctor) {
-      submitData.append('speciality', formData.speciality);
-    }
-
-    // Append image
-    if (image) {
-      submitData.append('image', image);
-    }
-
-  // Choose endpoint based on toggle
-  const endpoint = isDoctor 
-    ? 'http://localhost:4000/api/doctor/signup' 
-    : 'http://localhost:4000/api/user/signup';
+const handleVerifyOTP = async (e) => {
+  e.preventDefault();
+  setVerificationLoading(true);
+  setError('');
 
   try {
-    const response = await axios.post(endpoint, submitData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+    const endpoint = isDoctor
+      ? 'http://localhost:4000/api/doctor/verify-otp'
+      : 'http://localhost:4000/api/user/verify-otp';
+
+    const response = await axios.post(endpoint, {
+      email: formData.email,
+      otp: otp
     });
 
     if (response.data.success) {
-      if (response.data.token) {
-        localStorage.setItem('jwtToken', response.data.token);
-      }
-      navigate('/login');
+      setOtpVerified(true);
+    } else {
+      setError(response.data.message || 'OTP verification failed');
     }
   } catch (error) {
-    setError(error.response?.data?.message || 'Signup failed');
+    setError(error.response?.data?.message || 'OTP verification failed');
   } finally {
-    setLoading(false);
+    setVerificationLoading(false);
   }
+};
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!otpVerified) {
+    setError('Please verify OTP first');
+    return;
+  }
+  setLoading(true);
+  setError('');
+
+  const submitData = new FormData();
+  submitData.append('name', formData.name);
+  submitData.append('email', formData.email);
+  submitData.append('password', formData.password);
+  submitData.append('otp', otp);
+
+  // Add speciality for doctors
+  if (isDoctor) {
+    submitData.append('speciality', formData.speciality);
+  }
+
+  // Append image
+  if (image) {
+    submitData.append('image', image);
+  }
+
+// Choose endpoint based on toggle
+const endpoint = isDoctor 
+  ? 'http://localhost:4000/api/doctor/signup' 
+  : 'http://localhost:4000/api/user/signup';
+
+try {
+  const response = await axios.post(endpoint, submitData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+
+  if (response.data.success) {
+    if (response.data.token) {
+      localStorage.setItem('jwtToken', response.data.token);
+    }
+    navigate('/login');
+  }
+} catch (error) {
+  setError(error.response?.data?.message || 'Signup failed');
+} finally {
+  setLoading(false);
+}
 };
 
   const resendOTP = async () => {
@@ -250,7 +283,7 @@ const [resendTimer, setResendTimer] = useState(0);
             </div>
           )}
 
-           {otpSent && (
+           {otpSent && !otpVerified && (
    <div className="mb-4">
      <label className="block text-gray-700 text-sm font-bold mb-2">
        Enter OTP (Check your email)
@@ -262,13 +295,34 @@ const [resendTimer, setResendTimer] = useState(0);
        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
        required
      />
-     <div className="mt-2 text-sm text-blue-600 cursor-pointer" onClick={resendOTP}>
-       {resendTimer > 0 
-         ? `Resend OTP in ${resendTimer}s` 
-         : "Didn't receive OTP? Resend"}
+     <div className="mt-2 flex justify-between">
+       <button
+         type="button"
+         onClick={handleVerifyOTP}
+         disabled={verificationLoading}
+         className="text-sm text-blue-600 hover:text-blue-800"
+       >
+         {verificationLoading ? 'Verifying...' : 'Verify OTP'}
+       </button>
+       <button
+         type="button"
+         onClick={resendOTP}
+         disabled={resendTimer > 0}
+         className="text-sm text-blue-600 hover:text-blue-800"
+       >
+         {resendTimer > 0 
+           ? `Resend OTP in ${resendTimer}s` 
+           : "Didn't receive OTP? Resend"}
+       </button>
      </div>
    </div>
  )}
+
+{otpVerified && (
+  <div className="mb-4 text-green-600">
+    ✓ OTP verified successfully
+  </div>
+)}
 
           <button
             type="submit"

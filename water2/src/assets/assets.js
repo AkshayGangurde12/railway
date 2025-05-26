@@ -4,6 +4,8 @@ import group_profiles from './group_profiles.png'
 import profile_pic from './profile_pic.png'
 import contact_image from './contact_image.png'
 import about_image from './about_image.png'
+//import db1_img from './db1.png'
+//import pb1_img from './pb.png'
 import logo from './logo.svg'
 import logoo from './logoo.png'
 import dropdown_icon from './dropdown_icon.svg'
@@ -26,6 +28,8 @@ import doc7 from './doc7.png'
 import doc8 from './doc8.png'
 import doc9 from './doc9.png'
 import doc10 from './doc10.png'
+//import db2 from './db2.png'
+//import pb2 from './pb2.png'
 import doc11 from './doc11.png'
 import doc12 from './doc12.png'
 import doc13 from './doc13.png'
@@ -51,6 +55,9 @@ export const assets = {
     profile_pic,
     arrow_icon,
     contact_image,
+    //db1_img,
+    //pb1_img,
+
     about_image,
     menu_icon,
     cross_icon,
