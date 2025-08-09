@@ -35,14 +35,77 @@ export const uploadPdf = async (req, res) => {
 
 const signup = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, otp } = req.body;
     const imageFile = req.file;
+
+    console.log('User Signup - Request Data:', {
+      name,
+      email,
+      hasPassword: !!password,
+      hasOTP: !!otp,
+      providedOTP: otp,
+      hasImage: !!imageFile
+    });
 
     if (!name || !email || !password || !imageFile) {
       return res.status(400).json({ 
         success: false, 
         message: "All fields are required" 
       });
+    }
+
+    // Verify OTP if provided
+    if (otp) {
+      console.log('User Signup - OTP Verification Debug:', {
+        email,
+        providedOTP: otp,
+        providedOTPType: typeof otp
+      });
+      
+      const otpRecord = await OTPSchema.findOne({ email }).sort({ createdAt: -1 });
+      console.log('User Signup - OTP Record Found:', {
+        found: !!otpRecord,
+        storedOTP: otpRecord?.otp,
+        storedOTPType: typeof otpRecord?.otp,
+        verified: otpRecord?.verified,
+        createdAt: otpRecord?.createdAt,
+        timeDifference: otpRecord ? (new Date() - otpRecord.createdAt) : 'No record'
+      });
+      
+      if (!otpRecord) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'No OTP found for this email. Please request a new OTP.' 
+        });
+      }
+      
+      // Check if OTP is verified (either already verified or matches the provided OTP)
+      if (!otpRecord.verified && otpRecord.otp !== otp) {
+        console.log('User OTP Mismatch:', {
+          stored: otpRecord.otp,
+          provided: otp,
+          match: otpRecord.otp === otp,
+          alreadyVerified: otpRecord.verified
+        });
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Invalid OTP. Please verify your OTP first.' 
+        });
+      }
+      
+      // Check if OTP is expired
+      if (new Date() - otpRecord.createdAt > 10 * 60 * 1000) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'OTP expired. Please request a new OTP.' 
+        });
+      }
+      
+      // If OTP is not yet verified, verify and mark it
+      if (!otpRecord.verified) {
+        otpRecord.verified = true;
+        await otpRecord.save();
+      }
     }
 
     // Check if user already exists
@@ -70,6 +133,11 @@ const signup = async (req, res) => {
 
     const newUser = new userModel(userData);
     await newUser.save();
+
+    // Delete the used OTP after successful signup (if OTP was provided)
+    if (otp) {
+      await OTPSchema.deleteMany({ email });
+    }
 
     const token = jwt.sign(
       {
@@ -123,10 +191,27 @@ export const sendOTP = async (req, res) => {
     const { email, name } = req.body;
     console.log('Attempting to send OTP to:', email);
     
+    // Validate required fields
+    if (!email || !name) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Email and name are required' 
+      });
+    }
+    
     // Check if user exists
     const userExists = await userModel.findOne({ email }) || await doctorModel.findOne({ email });
     if (userExists) {
       return res.status(400).json({ success: false, message: 'User already exists' });
+    }
+
+    // Check if email configuration is available
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.error('Email configuration missing. Please set EMAIL_USER and EMAIL_PASS in environment variables.');
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Email service not configured. Please contact administrator.' 
+      });
     }
 
     // Generate OTP
@@ -164,7 +249,25 @@ export const sendOTP = async (req, res) => {
     res.json({ success: true, message: 'OTP sent successfully' });
   } catch (error) {
     console.error('Error sending OTP:', error);
-    res.status(500).json({ success: false, message: 'Failed to send OTP' });
+    
+    // Provide more specific error messages
+    if (error.code === 'EAUTH') {
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Email authentication failed. Please check email credentials.' 
+      });
+    } else if (error.code === 'ENOTFOUND') {
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Email service connection failed. Please check network connection.' 
+      });
+    }
+    
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to send OTP. Please try again later.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 
@@ -172,28 +275,73 @@ export const verifyOTP = async (req, res) => {
   try {
     const { email, otp } = req.body;
     
-    // Verify OTP first
+    if (!email || !otp) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Email and OTP are required' 
+      });
+    }
+    
+    // Find the latest OTP for this email
     const otpRecord = await OTPSchema.findOne({ email }).sort({ createdAt: -1 });
-    if (!otpRecord || otpRecord.otp !== otp) {
-      return res.status(400).json({ success: false, message: 'Invalid OTP' });
-    }
     
-    // Check if OTP is expired (e.g., 10 minutes)
-    if (new Date() - otpRecord.createdAt > 10 * 60 * 1000) {
-      return res.status(400).json({ success: false, message: 'OTP expired' });
+    if (!otpRecord) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'No OTP found for this email. Please request a new OTP' 
+      });
     }
+
+    // Check if OTP has expired
+    if (new Date() > otpRecord.expiresAt || new Date() - otpRecord.createdAt > 10 * 60 * 1000) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'OTP has expired. Please request a new one' 
+      });
+    }
+
+    // Verify OTP
+    if (otpRecord.otp !== otp) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid OTP' 
+      });
+    }
+
+    // Mark OTP as verified instead of deleting it immediately
+    otpRecord.verified = true;
+    await otpRecord.save();
     
-    // If OTP is valid, return success
     res.json({ success: true, message: 'OTP verified successfully' });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Failed to verify OTP' });
+    console.error('OTP Verification Error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to verify OTP',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 
 export const resendOTP = async (req, res) => {
   try {
     const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Email is required' 
+      });
+    }
+
+    // Check if email configuration is available
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.error('Email configuration missing. Please set EMAIL_USER and EMAIL_PASS in environment variables.');
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Email service not configured. Please contact administrator.' 
+      });
+    }
     
     // Delete any existing OTP for this email
     await OTPSchema.deleteMany({ email });
@@ -210,10 +358,10 @@ export const resendOTP = async (req, res) => {
 
     // Send email
     const mailOptions = {
-      from: 'sunil.22210652@viit.ac.in',
+      from: process.env.EMAIL_USER,
       to: email,
       subject: 'Your New OTP for Account Verification',
-      html: `<div>
+      html: `<div style="font-family: Arial, sans-serif; padding: 20px;">
         <h3>Hello,</h3>
         <p>Your new OTP for account verification is: <strong>${otp}</strong></p>
         <p>This OTP is valid for 10 minutes.</p>
@@ -224,8 +372,26 @@ export const resendOTP = async (req, res) => {
 
     res.json({ success: true, message: 'OTP resent successfully' });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Failed to resend OTP' });
+    console.error('Error resending OTP:', error);
+    
+    // Provide more specific error messages
+    if (error.code === 'EAUTH') {
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Email authentication failed. Please check email credentials.' 
+      });
+    } else if (error.code === 'ENOTFOUND') {
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Email service connection failed. Please check network connection.' 
+      });
+    }
+    
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to resend OTP. Please try again later.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 
@@ -628,6 +794,105 @@ export const getUserDocument = async (req, res) => {
           message: 'Error retrieving document',
           error: error.message
       });
+  }
+};
+
+// Profile Image Management
+export const updateProfileImage = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const imageFile = req.file;
+
+    if (!imageFile) {
+      return res.status(400).json({
+        success: false,
+        message: 'No image file provided'
+      });
+    }
+
+    // Validate file type
+    if (!imageFile.mimetype.startsWith('image/')) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please upload a valid image file'
+      });
+    }
+
+    // Convert image to base64
+    const base64Image = imageFile.buffer.toString('base64');
+    const mimeType = imageFile.mimetype;
+
+    // Update user with new image
+    const updatedUser = await userModel.findByIdAndUpdate(
+      userId,
+      {
+        image: {
+          base64: base64Image,
+          mimeType: mimeType
+        }
+      },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Profile image updated successfully',
+      image: updatedUser.image
+    });
+
+  } catch (error) {
+    console.error('Error updating profile image:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while updating profile image',
+      error: error.message
+    });
+  }
+};
+
+export const removeProfileImage = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Reset to default image
+    const defaultImage = {
+      base64: "iVBORw0KGgoAAAANSUhEUgAAAPAAAADwCAYAAAA+VemSAAAACXBIWXMAABCcAAAQnAEmzTo0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAA5uSREBVHgB7d0JchvHFcbxN+",
+      mimeType: "image/png"
+    };
+
+    const updatedUser = await userModel.findByIdAndUpdate(
+      userId,
+      { image: defaultImage },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Profile image removed successfully',
+      image: updatedUser.image
+    });
+
+  } catch (error) {
+    console.error('Error removing profile image:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while removing profile image',
+      error: error.message
+    });
   }
 };
 

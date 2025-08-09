@@ -9,6 +9,8 @@ import "jspdf-autotable";
 import { ethers } from "ethers";
 import { contractABI } from "./constants"; // Ensure your contractABI is correctly imported
 import Modal from "react-modal";
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // Set Modal's root element for accessibility
 Modal.setAppElement("#root");
@@ -52,8 +54,13 @@ const MyProfile = () => {
   );
   const [isPdfOpen, setIsPdfOpen] = useState(false);
   const [prescriptionImage, setPrescriptionImage] = useState(null);
+  const [profileImage, setProfileImage] = useState(null);
+  const [profileImagePreview, setProfileImagePreview] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [imageUploading, setImageUploading] = useState(false);
   const [error, setError] = useState("");
+  const [showImageMenu, setShowImageMenu] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [pdfUrl, setPdfUrl] = useState(null);
   const [pdfRecord, setPdfRecord] = useState(null);
@@ -62,6 +69,20 @@ const MyProfile = () => {
   // For blockchain (if used later)
   const [contract, setContract] = useState(null);
   const [account, setAccount] = useState(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showImageMenu && !event.target.closest('.profile-picture-container')) {
+        setShowImageMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showImageMenu]);
 
   // Fetch user data from backend using token from localStorage
   useEffect(() => {    const fetchUserData = async () => {
@@ -131,6 +152,8 @@ const MyProfile = () => {
 
   const renderDoctorDisplayView = () => (
     <div className="space-y-4">
+      {renderProfilePicture()}
+      
       <p><span className="font-medium">Name:</span> {user?.name}</p>
       <p><span className="font-medium">Email:</span> {user?.email}</p>
       <p><span className="font-medium">Speciality:</span> {user?.speciality}</p>
@@ -321,6 +344,120 @@ const MyProfile = () => {
     }
   };
 
+  // Profile Image Management Functions
+  const handleImageUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setError('Please select a valid image file');
+        return;
+      }
+      
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Image size should be less than 5MB');
+        return;
+      }
+      
+      setProfileImage(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setProfileImagePreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+      
+      // Upload immediately
+      uploadProfileImage(file);
+    }
+  };
+
+  const uploadProfileImage = async (file) => {
+    setImageUploading(true);
+    setError('');
+    
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      const token = localStorage.getItem("jwtToken");
+      const endpoint = isDoctor 
+        ? "http://localhost:4000/api/doctor/update-image"
+        : "http://localhost:4000/api/user/update-image";
+      
+      const response = await axios.put(endpoint, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`
+        },
+      });
+      
+      if (response.data.success) {
+        // Update user state with new image
+        setUser(prev => ({
+          ...prev,
+          image: response.data.image
+        }));
+        setError('');
+        toast.success('Profile picture updated successfully!');
+      }
+    } catch (err) {
+      console.error('Error uploading image:', err);
+      setError(err.response?.data?.message || 'Failed to upload image');
+    } finally {
+      setImageUploading(false);
+    }
+  };
+
+  const handleRemoveImage = async () => {
+    if (window.confirm('Are you sure you want to remove your profile picture?')) {
+      setImageUploading(true);
+      setError('');
+      
+      try {
+        const token = localStorage.getItem("jwtToken");
+        const endpoint = isDoctor 
+          ? "http://localhost:4000/api/doctor/remove-image"
+          : "http://localhost:4000/api/user/remove-image";
+        
+        const response = await axios.delete(endpoint, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+        });
+        
+        if (response.data.success) {
+          // Reset to default image
+          setUser(prev => ({
+            ...prev,
+            image: response.data.image
+          }));
+          setProfileImage(null);
+          setProfileImagePreview(null);
+          toast.success('Profile picture removed successfully!');
+        }
+      } catch (err) {
+        console.error('Error removing image:', err);
+        setError(err.response?.data?.message || 'Failed to remove image');
+      } finally {
+        setImageUploading(false);
+      }
+    }
+  };
+
+  const getProfileImageSrc = () => {
+    if (profileImagePreview) {
+      return profileImagePreview;
+    }
+    if (user?.image?.base64) {
+      return `data:${user.image.mimeType || 'image/png'};base64,${user.image.base64}`;
+    }
+    // Default placeholder image
+    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgMTA1QzExNi41NjkgMTA1IDEzMCA5MS41NjkgMTMwIDc1QzEzMCA1OC40MzEgMTE2LjU2OSA0NSAxMDAgNDVDODMuNDMxIDQ1IDcwIDU4LjQzMSA3MCA3NUM3MCA5MS41NjkgODMuNDMxIDEwNSAxMDAgMTA1WiIgZmlsbD0iIzlDQTNBRiIvPgo8cGF0aCBkPSJNMTAwIDEyMEM5Mi4wNDM1IDEyMCA4NC4zNDc4IDEyMy4xNjEgNzguNzg2OCAxMjguNzIyQzczLjIyNTggMTM0LjI4MyA3MCA0MS45NTY1IDcwIDE1MEg3NS4yMTc0SDEyNC43ODNIMTMwQzEzMCAxNDEuOTU2NSAxMjYuNzc0IDEzNC4yODMgMTIxLjIxMyAxMjguNzIyQzExNS42NTIgMTIzLjE2MSAxMDcuOTU2IDEyMCAxMDAgMTIwWiIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4K';
+  };
+
   // Toggle to enter edit mode
   const handleEditClick = () => {
     setIsEditing(true);
@@ -347,9 +484,112 @@ const MyProfile = () => {
     setIsEditing(false);
   };
 
+  // Profile Picture Component with Click Menu
+  const renderProfilePicture = () => (
+    <div className="text-center mb-8">
+      <div className="relative inline-block profile-picture-container">
+        {/* Profile Picture - Clickable */}
+        <div 
+          className="relative cursor-pointer group"
+          onClick={() => setShowImageMenu(!showImageMenu)}
+        >
+          <img
+            src={getProfileImageSrc()}
+            alt="Profile Picture"
+            className="w-32 h-32 rounded-full object-cover border-4 border-gray-200 shadow-lg transition-all duration-200 group-hover:brightness-75"
+            onError={(e) => {
+              e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgMTA1QzExNi41NjkgMTA1IDEzMCA5MS41NjkgMTMwIDc1QzEzMCA1OC40MzEgMTE2LjU2OSA0NSAxMDAgNDVDODMuNDMxIDQ1IDcwIDU4LjQzMSA3MCA3NUM3MCA5MS41NjkgODMuNDMxIDEwNSAxMDAgMTA1WiIgZmlsbD0iIzlDQTNBRiIvPgo8cGF0aCBkPSJNMTAwIDEyMEM5Mi4wNDM1IDEyMCA4NC4zNDc4IDEyMy4xNjEgNzguNzg2OCAxMjguNzIyQzczLjIyNTggMTM0LjI4MyA3MCA0MS45NTY1IDcwIDE1MEg3NS4yMTc0SDEyNC43ODNIMTMwQzEzMCAxNDEuOTU2NSAxMjYuNzc0IDEzNC4yODMgMTIxLjIxMyAxMjguNzIyQzExNS42NTIgMTIzLjE2MSAxMDcuOTU2IDEyMCAxMDAgMTIwWiIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4K';
+            }}
+          />
+          
+          {/* Camera Icon Overlay */}
+          <div className="absolute inset-0 rounded-full flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200">
+            <svg className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </div>
+          
+          {/* Loading Overlay */}
+          {imageUploading && (
+            <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+            </div>
+          )}
+        </div>
+        
+        {/* Dropdown Menu */}
+        {showImageMenu && (
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-50 min-w-[160px]">
+            <div className="py-2">
+              {/* Add Image Option */}
+              <label className="flex items-center px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors duration-200">
+                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Add Image
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    handleImageUpload(e);
+                    setShowImageMenu(false);
+                  }}
+                  className="hidden"
+                  disabled={imageUploading}
+                />
+              </label>
+              
+              {/* Remove Image Option */}
+              <button
+                onClick={() => {
+                  handleRemoveImage();
+                  setShowImageMenu(false);
+                }}
+                disabled={imageUploading}
+                className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors duration-200 disabled:opacity-50"
+              >
+                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Remove Image
+              </button>
+              
+              {/* View Full Size Option */}
+              <button
+                onClick={() => {
+                  setShowImageModal(true);
+                  setShowImageMenu(false);
+                }}
+                className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+              >
+                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                View Full Size
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {/* Click instruction */}
+      <p className="text-gray-500 text-sm mt-2">Click on image to edit</p>
+      
+      {error && (
+        <div className="mt-3 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
+          {error}
+        </div>
+      )}
+    </div>
+  );
+
   // Render display view (read-only)
   const renderDisplayView = () => (
     <div className="space-y-4">
+      {renderProfilePicture()}
+      
       <p>
         <span className="font-medium">Email:</span> {user?.email}
       </p>
@@ -643,6 +883,66 @@ return (
         )}
       </Modal>
     )}
+
+    {/* Profile Image Modal */}
+    <Modal
+      isOpen={showImageModal}
+      onRequestClose={() => setShowImageModal(false)}
+      style={{
+        content: { 
+          width: "90%", 
+          height: "90%", 
+          margin: "auto", 
+          borderRadius: "12px",
+          padding: "0",
+          border: "none",
+          background: "rgba(0, 0, 0, 0.9)"
+        },
+        overlay: {
+          backgroundColor: "rgba(0, 0, 0, 0.8)"
+        }
+      }}
+    >
+      <div className="relative w-full h-full flex items-center justify-center">
+        {/* Close Button */}
+        <button 
+          onClick={() => setShowImageModal(false)}
+          className="absolute top-4 right-4 z-10 bg-white bg-opacity-20 hover:bg-opacity-30 text-white rounded-full p-2 transition-all duration-200"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        
+        {/* Full Size Image */}
+        <img
+          src={getProfileImageSrc()}
+          alt="Profile Picture - Full Size"
+          className="max-w-full max-h-full object-contain rounded-lg"
+          onError={(e) => {
+            e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgMTA1QzExNi41NjkgMTA1IDEzMCA5MS41NjkgMTMwIDc1QzEzMCA1OC40MzEgMTE2LjU2OSA0NSAxMDAgNDVDODMuNDMxIDQ1IDcwIDU4LjQzMSA3MCA3NUM3MCA5MS41NjkgODMuNDMxIDEwNSAxMDAgMTA1WiIgZmlsbD0iIzlDQTNBRiIvPgo8cGF0aCBkPSJNMTAwIDEyMEM5Mi4wNDM1IDEyMCA4NC4zNDc4IDEyMy4xNjEgNzguNzg2OCAxMjguNzIyQzczLjIyNTggMTM0LjI4MyA3MCA0MS45NTY1IDcwIDE1MEg3NS4yMTc0SDEyNC43ODNIMTMwQzEzMCAxNDEuOTU2NSAxMjYuNzc0IDEzNC4yODMgMTIxLjIxMyAxMjguNzIyQzExNS42NTIgMTIzLjE2MSAxMDcuOTU2IDEyMCAxMDAgMTIwWiIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4K';
+          }}
+        />
+        
+        {/* Image Info */}
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-center bg-black bg-opacity-30 rounded-lg px-4 py-2">
+          <p className="text-sm">Profile Picture</p>
+        </div>
+      </div>
+    </Modal>
+    
+    {/* Toast Notifications */}
+    <ToastContainer
+      position="top-right"
+      autoClose={3000}
+      hideProgressBar={false}
+      newestOnTop={false}
+      closeOnClick
+      rtl={false}
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover
+    />
   </div>
 );
 };
