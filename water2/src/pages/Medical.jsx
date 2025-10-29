@@ -27,7 +27,7 @@ export default function DoctorSelection() {
           autoClose: 3000
         });
         
-        const response = await axios.get("http://localhost:4000/api/doctor/all", {
+        const response = await axios.get("http://localhost:5000/api/doctor/all", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -82,7 +82,7 @@ export default function DoctorSelection() {
       }
 
       const response = await axios.post(
-        "http://localhost:4000/api/doctor/assign",
+        "http://localhost:5000/api/doctor/assign",
         { 
           userEmail: user.email,
           doctorEmail: doctorEmail
@@ -128,7 +128,7 @@ export default function DoctorSelection() {
       });
 
       const response = await axios.post(
-        "http://localhost:4000/api/doctor/assign",
+        "http://localhost:5000/api/doctor/assign",
         { 
           userEmail: user.email,
           doctorEmail: doctorEmail

@@ -5,11 +5,9 @@ const connectDB = async () => {
     mongoose.connection.on('connected', () => console.log("Database Connected"));
     mongoose.connection.on('error', (err) => console.error("MongoDB connection error:", err));
 
-    const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/medicare';
+    const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/MediCare';
     await mongoose.connect(mongoURI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      dbName: 'medicare'
+      dbName: 'MediCare'
     });
     
     console.log('MongoDB connected successfully');

@@ -16,7 +16,7 @@ const ChatList = () => {
   const fetchDoctors = async () => {
     setLoading(true);
     try {
-      const doctorsResponse = await axios.get('http://localhost:4000/api/doctor/all');
+      const doctorsResponse = await axios.get('http://localhost:5000/api/doctor/all');
       const doctorsList = doctorsResponse.data?.doctors || [];
       const filteredDoctors = doctorsList.filter(d => d && d.email && d.email !== user?.email);
       setDoctors(filteredDoctors);
@@ -31,7 +31,7 @@ const ChatList = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const usersResponse = await axios.get('http://localhost:4000/api/user/getUsers');
+      const usersResponse = await axios.get('http://localhost:5000/api/user/getUsers');
       const usersList = usersResponse.data?.users || [];
       const filteredUsers = usersList.filter(u => u && u.email && u.email !== user?.email);
       setUsers(filteredUsers);

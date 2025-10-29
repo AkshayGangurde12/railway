@@ -38,7 +38,7 @@ export default function DoctorDetail() {
       try {
         setIsLoading(true);
         console.log("Fetching doctor with email:", email);
-        const response = await axios.get(`http://localhost:4000/api/doctor/${email}`, {
+        const response = await axios.get(`http://localhost:5000/api/doctor/${email}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         console.log("Doctor API response:", response.data);
@@ -74,7 +74,7 @@ export default function DoctorDetail() {
     setChecking(true);
     setIsAvailable(null);
     try {
-      const response = await axios.get("http://localhost:4000/api/appointment/check", {
+      const response = await axios.get("http://localhost:5000/api/appointment/check", {
         params: { doctorEmail: email, appointmentDate },
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -122,7 +122,7 @@ export default function DoctorDetail() {
     setBooking(true);
     try {
       const bookResponse = await axios.post(
-        "http://localhost:4000/api/appointment/book",
+        "http://localhost:5000/api/appointment/book",
         { doctorEmail: email, appointmentDate, patientEmail: user.email },
         {
           headers: {

@@ -11,7 +11,7 @@ const ShowData = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get('http://localhost:4000/api/user/get-users');
+        const response = await axios.get('http://localhost:5000/api/user/get-users');
         setUsers(response.data.users);
       } catch (error) {
         setError('Error fetching users');

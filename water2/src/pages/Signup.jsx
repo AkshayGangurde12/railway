@@ -47,8 +47,8 @@ const [otpVerified, setOtpVerified] = useState(false);
     try {
       // Select endpoint based on user type
       const endpoint = isDoctor
-        ? 'http://localhost:4000/api/doctor/send-otp'  // Matches backend route
-        : 'http://localhost:4000/api/user/send-otp';
+        ? 'http://localhost:5000/api/doctor/send-otp'  // Matches backend route
+        : 'http://localhost:5000/api/user/send-otp';
 
       console.log('Using endpoint:', endpoint);
       console.log('Sending data:', {
@@ -88,8 +88,8 @@ const handleVerifyOTP = async (e) => {
 
   try {
     const endpoint = isDoctor
-      ? 'http://localhost:4000/api/doctor/verify-otp'
-      : 'http://localhost:4000/api/user/verify-otp';
+      ? 'http://localhost:5000/api/doctor/verify-otp'
+      : 'http://localhost:5000/api/user/verify-otp';
 
     const response = await axios.post(endpoint, {
       email: formData.email,
@@ -135,8 +135,8 @@ const handleSubmit = async (e) => {
 
 // Choose endpoint based on toggle
 const endpoint = isDoctor 
-  ? 'http://localhost:4000/api/doctor/signup' 
-  : 'http://localhost:4000/api/user/signup';
+  ? 'http://localhost:5000/api/doctor/signup' 
+  : 'http://localhost:5000/api/user/signup';
 
 try {
   const response = await axios.post(endpoint, submitData, {
@@ -164,8 +164,8 @@ try {
   setError('');
   try {
     const endpoint = isDoctor
-      ? 'http://localhost:4000/api/doctor/resend-otp'  // Updated endpoi
-      : 'http://localhost:4000/api/user/resend-otp';
+      ? 'http://localhost:5000/api/doctor/resend-otp'  // Updated endpoi
+      : 'http://localhost:5000/api/user/resend-otp';
     const response = await axios.post(endpoint, {
       email: formData.email
     });

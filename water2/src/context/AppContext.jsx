@@ -28,7 +28,7 @@ const AppContextProvider = (props) => {
 
   const fetchUserData = async (storedToken) => {
     try {
-      const response = await axios.get('http://localhost:4000/api/user/me', {
+      const response = await axios.get('http://localhost:5000/api/user/me', {
         headers: {
           Authorization: `Bearer ${storedToken}`
         }

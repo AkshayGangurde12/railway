@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }) => {
 
   const fetchUserData = async () => {
     try {
-      const response = await axios.get('http://localhost:4000/api/user/me');
+      const response = await axios.get('http://localhost:5000/api/user/me');
       if (response.data.success) {
         setUser(response.data.user);
       }

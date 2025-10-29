@@ -59,7 +59,7 @@ export default function Address() {
       setLoading(true)
       try {
         console.log("Sending data:", formData); // Debug log
-        const response = await axios.put('http://localhost:4000/api/user/update-address', {
+        const response = await axios.put('http://localhost:5000/api/user/update-address', {
           ...formData,
           email: contextUser?.email // Ensure email is sent
         });
@@ -345,7 +345,7 @@ function InputField({ icon, name, label, value, onChange, error, textarea = fals
 //       setLoading(true);
 //       try {
 //         console.log("Sending data:", formData);
-//         const response = await axios.put('http://localhost:4000/api/user/update-address', {
+//         const response = await axios.put('http://localhost:5000/api/user/update-address', {
 //           ...formData,
 //           email: contextUser?.email // Ensure email is sent
 //         });
@@ -693,7 +693,7 @@ function InputField({ icon, name, label, value, onChange, error, textarea = fals
 // //       setLoading(true);
 // //       try {
 // //         console.log("Sending data:", formData);
-// //         const response = await axios.put('http://localhost:4000/api/user/update-address', {
+// //         const response = await axios.put('http://localhost:5000/api/user/update-address', {
 // //           ...formData,
 // //           email: contextUser?.email
 // //         });

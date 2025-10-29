@@ -142,7 +142,7 @@ const ChatScreen = () => {
 
   // Connect to socket.io server
   useEffect(() => {
-    socketRef.current = io('http://localhost:4000');
+    socketRef.current = io('http://localhost:5000');
     
     if (user?.email) {
       socketRef.current.emit('user_online', user.email);
@@ -176,7 +176,7 @@ const ChatScreen = () => {
   useEffect(() => {
     const fetchReceiverInfo = async () => {
       try {
-        const response = await axios.get(`http://localhost:4000/api/user/info/${receiverEmail}`);
+        const response = await axios.get(`http://localhost:5000/api/user/info/${receiverEmail}`);
         if (response.data.success) {
           setReceiverInfo(response.data.user);
         }
@@ -193,7 +193,7 @@ const ChatScreen = () => {
     const fetchChatHistory = async () => {
       try {
         if (user?.email && receiverEmail) {
-          const response = await axios.get('http://localhost:4000/api/messages/history', {
+          const response = await axios.get('http://localhost:5000/api/messages/history', {
             params: {
               sender: user.email,
               receiver: receiverEmail
@@ -298,7 +298,7 @@ const ChatScreen = () => {
     };
     
     try {
-      await axios.post('http://localhost:4000/api/messages/send', messageData);
+      await axios.post('http://localhost:5000/api/messages/send', messageData);
       socketRef.current.emit('send_message', messageData);
       setMessages((prevMessages) => [...prevMessages, messageData]);
       setMessage('');

@@ -13,5 +13,21 @@ export default defineConfig({
     hmr: {
       host: 'localhost'
     }
+  },
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+    minify: 'terser',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          router: ['react-router-dom']
+        }
+      }
+    }
+  },
+  define: {
+    'process.env.NODE_ENV': '"production"'
   }
 })

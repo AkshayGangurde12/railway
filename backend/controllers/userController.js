@@ -180,7 +180,18 @@ const transporter = nodemailer.createTransport({
 // Test the connection
 transporter.verify((error, success) => {
   if (error) {
-    console.error('SMTP configuration error:', error);
+    if (error.code === 'EAUTH' && error.responseCode === 535) {
+      console.error('SMTP Authentication Error: Gmail credentials rejected.');
+      console.error('Solution: You need to use a Gmail App Password instead of your regular password.');
+      console.error('Steps:');
+      console.error('1. Go to Google Account Settings → Security');
+      console.error('2. Enable 2-Factor Authentication if not already enabled');
+      console.error('3. Generate an App Password for "Mail"');
+      console.error('4. Replace EMAIL_PASS in .env with the 16-character App Password');
+      console.error('5. Remove spaces from the App Password when copying to .env');
+    } else {
+      console.error('SMTP configuration error:', error);
+    }
   } else {
     console.log('Server is ready to take messages');
   }

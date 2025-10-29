@@ -9,10 +9,16 @@ const appointmentRouter = express.Router();
 // Create a transporter for sending emails
 // You'll need to configure this with your email service credentials
 const transporter = nodemailer.createTransport({
-  service: 'gmail', // or another email service
+  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
   auth: {
-    user: process.env.EMAIL_USER, // set these in your .env file
-    pass: process.env.EMAIL_PASSWORD
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS  // Fixed: was EMAIL_PASSWORD, now EMAIL_PASS
+  },
+  tls: {
+    rejectUnauthorized: false
   }
 });
 

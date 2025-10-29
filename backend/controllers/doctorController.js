@@ -237,20 +237,58 @@ export const signup = async (req, res) => {
 
 
     // Verify OTP first
-const otpRecord = await OTPSchema.findOne({ email }).sort({ createdAt: -1 });
-if (!otpRecord || otpRecord.otp !== otp) {
-  return res.status(400).json({ 
-    success: false, 
-    message: 'Invalid OTP' 
-  });
-}
-// Check if OTP is expired
-if (new Date() - otpRecord.createdAt > 10 * 60 * 1000) {
-  return res.status(400).json({ 
-    success: false, 
-    message: 'OTP expired' 
-  });
-}
+    console.log('Doctor Signup - OTP Verification Debug:', {
+      email,
+      providedOTP: otp,
+      providedOTPType: typeof otp
+    });
+    
+    const otpRecord = await OTPSchema.findOne({ email }).sort({ createdAt: -1 });
+    console.log('Doctor Signup - OTP Record Found:', {
+      found: !!otpRecord,
+      storedOTP: otpRecord?.otp,
+      storedOTPType: typeof otpRecord?.otp,
+      verified: otpRecord?.verified,
+      createdAt: otpRecord?.createdAt,
+      expiresAt: otpRecord?.expiresAt,
+      timeDifference: otpRecord ? (new Date() - otpRecord.createdAt) : 'No record'
+    });
+    
+    if (!otpRecord) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'No OTP found for this email. Please request a new OTP.' 
+      });
+    }
+    
+    // Check if OTP has expired
+    if (new Date() > otpRecord.expiresAt) {
+      await OTPSchema.deleteOne({ _id: otpRecord._id });
+      return res.status(400).json({ 
+        success: false, 
+        message: 'OTP has expired. Please request a new one' 
+      });
+    }
+    
+    // Check if OTP is verified (either already verified or matches the provided OTP)
+    if (!otpRecord.verified && otpRecord.otp !== otp) {
+      console.log('Doctor OTP Mismatch:', {
+        stored: otpRecord.otp,
+        provided: otp,
+        match: otpRecord.otp === otp,
+        alreadyVerified: otpRecord.verified
+      });
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid OTP. Please verify your OTP first.' 
+      });
+    }
+    
+    // If OTP is not yet verified, verify and mark it
+    if (!otpRecord.verified) {
+      otpRecord.verified = true;
+      await otpRecord.save();
+    }
 
     // Build doctor data with default values for missing fields (using non-empty defaults)
     const doctorData = {
@@ -322,7 +360,18 @@ const transporter = nodemailer.createTransport({
 // Test the connection
 transporter.verify((error, success) => {
   if (error) {
-    console.error('SMTP configuration error:', error);
+    if (error.code === 'EAUTH' && error.responseCode === 535) {
+      console.error('SMTP Authentication Error: Gmail credentials rejected.');
+      console.error('Solution: You need to use a Gmail App Password instead of your regular password.');
+      console.error('Steps:');
+      console.error('1. Go to Google Account Settings → Security');
+      console.error('2. Enable 2-Factor Authentication if not already enabled');
+      console.error('3. Generate an App Password for "Mail"');
+      console.error('4. Replace EMAIL_PASS in .env with the 16-character App Password');
+      console.error('5. Remove spaces from the App Password when copying to .env');
+    } else {
+      console.error('SMTP configuration error:', error);
+    }
   } else {
     console.log('Server is ready to take our messages');
   }
@@ -496,8 +545,9 @@ export const verifyOTP = async (req, res) => {
       });
     }
 
-    // Delete the used OTP
-    await OTPSchema.deleteOne({ _id: otpRecord._id });
+    // Mark OTP as verified instead of deleting it immediately
+    otpRecord.verified = true;
+    await otpRecord.save();
 
     res.json({ 
       success: true, 

@@ -10,10 +10,18 @@ const OTPSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  verified: {
+    type: Boolean,
+    default: false
+  },
   createdAt: {
     type: Date,
     default: Date.now,
     expires: 600 // Document expires after 10 minutes (in seconds)
+  },
+  expiresAt: {
+    type: Date,
+    default: () => new Date(Date.now() + 10 * 60 * 1000) // 10 minutes from now
   }
 });
 

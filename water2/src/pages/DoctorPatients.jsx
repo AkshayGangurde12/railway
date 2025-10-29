@@ -17,7 +17,7 @@ export default function DoctorDropdown() {
         if (!token) {
           throw new Error("No authentication token found");
         }
-        const response = await axios.get("http://localhost:4000/api/doctor/all", {
+        const response = await axios.get("http://localhost:5000/api/doctor/all", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -62,7 +62,7 @@ export default function DoctorDropdown() {
       }
 
       const response = await axios.post(
-        "http://localhost:4000/api/doctor/assign",
+        "http://localhost:5000/api/doctor/assign",
         {
           patientEmail: user.email,
           doctorId: doctorId,

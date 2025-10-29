@@ -16,10 +16,10 @@ const useDoctorAccess = () => {
       setError(null);
       
       // Fetch all doctors
-      const doctorsResponse = await axios.get('http://localhost:4000/api/doctor/all');
+      const doctorsResponse = await axios.get('http://localhost:5000/api/doctor/all');
       
       // Fetch authorized doctors
-      const authorizedResponse = await axios.get('http://localhost:4000/api/user/authorized-doctors');
+      const authorizedResponse = await axios.get('http://localhost:5000/api/user/authorized-doctors');
       
       if (doctorsResponse.data.success && authorizedResponse.data.success) {
         const allDoctors = doctorsResponse.data.doctors;
@@ -49,7 +49,7 @@ const useDoctorAccess = () => {
 
   const grantAccess = async (doctorEmail) => {
     try {
-      const response = await axios.post('http://localhost:4000/api/user/grant-doctor-access', { 
+      const response = await axios.post('http://localhost:5000/api/user/grant-doctor-access', { 
         doctorEmail 
       });
       
@@ -77,7 +77,7 @@ const useDoctorAccess = () => {
 
   const revokeAccess = async (doctorEmail) => {
     try {
-      const response = await axios.post('http://localhost:4000/api/user/revoke-doctor-access', { 
+      const response = await axios.post('http://localhost:5000/api/user/revoke-doctor-access', { 
         doctorEmail 
       });
       

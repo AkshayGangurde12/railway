@@ -31,7 +31,7 @@ const AddDoctor = () => {
 
     try {
       const response = await axios.post(
-        'http://localhost:4000/api/admin/add-doctor',
+        'http://localhost:5000/api/admin/add-doctor',
         formData,
         {
           headers: {

@@ -61,7 +61,7 @@ export default function Dashboard() {
 
         if (isDoctor) {
           // Fetch doctor data
-          const response = await axios.get("http://localhost:4000/api/doctor/me", {
+          const response = await axios.get("http://localhost:5000/api/doctor/me", {
             headers: { Authorization: `Bearer ${token}` }
           });
           if (response.data.success && response.data.doctor) {
@@ -72,7 +72,7 @@ export default function Dashboard() {
           }
         } else {
           // Fetch patient data
-          const response = await axios.get("http://localhost:4000/api/user/get-users", {
+          const response = await axios.get("http://localhost:5000/api/user/get-users", {
             headers: { Authorization: `Bearer ${token}` }
           });
           const fetchedUsers = response.data.users;

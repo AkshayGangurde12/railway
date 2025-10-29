@@ -48,7 +48,7 @@ export default function Document() {
       });
 
       const response = await axios.put(
-        'http://localhost:4000/api/user/update-documents', 
+        'http://localhost:5000/api/user/update-documents', 
         formDataToSend, 
         {
           headers: {

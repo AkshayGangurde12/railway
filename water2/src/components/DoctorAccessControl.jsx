@@ -17,8 +17,8 @@ const DoctorAccessControl = () => {
       }
 
       const endpoint = currentStatus
-        ? 'http://localhost:4000/api/user/revoke-doctor-access'
-        : 'http://localhost:4000/api/user/grant-doctor-access';
+        ? 'http://localhost:5000/api/user/revoke-doctor-access'
+        : 'http://localhost:5000/api/user/grant-doctor-access';
 
       const response = await axios.post(
         endpoint,

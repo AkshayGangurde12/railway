@@ -44,8 +44,8 @@ const Login = () => {
 
     try {
       const endpoint = isDoctor
-        ? "http://localhost:4000/api/doctor/login"
-        : "http://localhost:4000/api/user/login";
+        ? "http://localhost:5000/api/doctor/login"
+        : "http://localhost:5000/api/user/login";
 
       const response = await axios.post(endpoint, {
         email: formData.email,
@@ -98,7 +98,7 @@ const Login = () => {
         role: role,
       };
 
-      const response = await axios.post("http://localhost:4000/api/auth/google", userData, {
+      const response = await axios.post("http://localhost:5000/api/auth/google", userData, {
         headers: {
           "Content-Type": "application/json",
         },

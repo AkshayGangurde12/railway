@@ -16,7 +16,7 @@ const DoctorProfile = () => {
     const fetchDoctorProfile = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`http://localhost:4000/api/doctor/profile/${email}`);
+        const response = await axios.get(`http://localhost:5000/api/doctor/profile/${email}`);
         
         if (response.data.success) {
           setDoctor(response.data.doctor);
@@ -89,7 +89,7 @@ const DoctorProfile = () => {
             {doctor.profileImage ? (
               <img
                 className="h-48 w-48 rounded-full object-cover border-4 border-white"
-                src={`http://localhost:4000/${doctor.profileImage}`}
+                src={`http://localhost:5000/${doctor.profileImage}`}
                 alt={doctor.name}
               />
             ) : (

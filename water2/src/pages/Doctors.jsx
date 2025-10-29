@@ -21,7 +21,7 @@ const Doctors = () => {
       
       try {
         setIsLoading(true);
-        const response = await axios.get('http://localhost:4000/api/doctor/all', {
+        const response = await axios.get('http://localhost:5000/api/doctor/all', {
           headers: { Authorization: `Bearer ${token}` }
         });
         

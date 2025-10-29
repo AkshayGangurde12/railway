@@ -12,7 +12,7 @@ const handleDownloadPdf = async (patientId, patientName) => {
   try {
     const token = localStorage.getItem("jwtToken");
     const response = await axios.get(
-      `http://localhost:4000/api/user/patient/${patientId}/pdf`,
+      `http://localhost:5000/api/user/patient/${patientId}/pdf`,
       {
         headers: { Authorization: `Bearer ${token}` },
         responseType: "blob",
@@ -39,7 +39,7 @@ const handleDownloadPdf = async (patientId, patientName) => {
       try {
         const token = localStorage.getItem("jwtToken");
         const response = await axios.get(
-          "http://localhost:4000/api/user/patients/assigned-to-me",
+          "http://localhost:5000/api/user/patients/assigned-to-me",
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -65,7 +65,7 @@ const handleDownloadPdf = async (patientId, patientName) => {
     try {
       const token = localStorage.getItem("jwtToken");
       const response = await axios.get(
-        `http://localhost:4000/api/user/patient/${patientId}/pdf`,
+        `http://localhost:5000/api/user/patient/${patientId}/pdf`,
         {
           headers: { Authorization: `Bearer ${token}` },
           responseType: "blob",

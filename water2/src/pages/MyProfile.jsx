@@ -96,8 +96,8 @@ const MyProfile = () => {
 
         // Choose endpoint based on user type
         const endpoint = isDoctor 
-          ? "http://localhost:4000/api/doctor/me"
-          : "http://localhost:4000/api/user/me";
+          ? "http://localhost:5000/api/doctor/me"
+          : "http://localhost:5000/api/user/me";
 
         const response = await axios.get(endpoint, {
           headers: { Authorization: `Bearer ${token}` },
@@ -299,7 +299,7 @@ const MyProfile = () => {
 
     try {
       const response = await axios.put(
-        "http://localhost:4000/api/user/update",
+        "http://localhost:5000/api/user/update",
         submitData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -330,7 +330,7 @@ const MyProfile = () => {
       const pdfFormData = new FormData();
       pdfFormData.append("pdf", pdfFile);
       console.log("handleStorePdf: FormData prepared. Keys:", [...pdfFormData.keys()]);
-      const uploadUrl = "http://localhost:4000/api/user/upload-pdf";
+      const uploadUrl = "http://localhost:5000/api/user/upload-pdf";
       console.log("handleStorePdf: Sending PUT request to:", uploadUrl);
       const response = await axios.put(uploadUrl, pdfFormData);
       console.log("handleStorePdf: Received response:", response);
@@ -384,8 +384,8 @@ const MyProfile = () => {
       
       const token = localStorage.getItem("jwtToken");
       const endpoint = isDoctor 
-        ? "http://localhost:4000/api/doctor/update-image"
-        : "http://localhost:4000/api/user/update-image";
+        ? "http://localhost:5000/api/doctor/update-image"
+        : "http://localhost:5000/api/user/update-image";
       
       const response = await axios.put(endpoint, formData, {
         headers: {
@@ -419,8 +419,8 @@ const MyProfile = () => {
       try {
         const token = localStorage.getItem("jwtToken");
         const endpoint = isDoctor 
-          ? "http://localhost:4000/api/doctor/remove-image"
-          : "http://localhost:4000/api/user/remove-image";
+          ? "http://localhost:5000/api/doctor/remove-image"
+          : "http://localhost:5000/api/user/remove-image";
         
         const response = await axios.delete(endpoint, {
           headers: {

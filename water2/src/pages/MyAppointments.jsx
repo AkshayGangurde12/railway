@@ -11,9 +11,9 @@ const MyAppointments = () => {
 useEffect(() => {
   const fetchAppointments = async () => {
     try {
-      let url = 'http://localhost:4000/api/appointment/my-appointments';
+      let url = 'http://localhost:5000/api/appointment/my-appointments';
       if (isDoctor) {
-        url = 'http://localhost:4000/api/doctor/doctor-appointments';
+        url = 'http://localhost:5000/api/doctor/doctor-appointments';
       }
       const response = await axios.get(url, {
         headers: {

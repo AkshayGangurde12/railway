@@ -4,6 +4,7 @@ import 'dotenv/config';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import connectDB from './config/mongodb.js';
+import validateEnvironment from './config/validateEnv.js';
 import userRouter from './routes/userRoute.js';
 import doctorRouter from './routes/doctorRoute.js';
 import appointmentRouter from './routes/appointmentRoute.js';
@@ -11,11 +12,11 @@ import messageRouter from './routes/messageRoute.js';
 import authRouter from './routes/auth.js';
 
 const app = express();
-const port = process.env.PORT || 4000;
+const port = process.env.PORT || 5000;
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: ['http://localhost:5173', 'http://localhost:4000'],
+    origin: ['http://localhost:5173', 'http://localhost:5000', 'http://10.140.170.216:5173'],
     methods: ['GET', 'POST'],
     credentials: true
   }
@@ -24,12 +25,24 @@ const io = new Server(httpServer, {
 // middlewares
 app.use(express.json());
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:4000'], // Add all allowed origins
+  origin: [
+    'http://localhost:5173', 
+    'http://localhost:5000', 
+    'http://10.140.170.216:5173',
+    'https://your-vercel-app.vercel.app', // Replace with your actual Vercel URL
+    /\.vercel\.app$/ // Allow all Vercel domains
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
 
+
+// Validate environment configuration before starting
+if (!validateEnvironment()) {
+  console.error('❌ Server startup aborted due to configuration errors');
+  process.exit(1);
+}
 
 connectDB();
 
